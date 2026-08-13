@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  postgres-users:
+    image: postgres:16-alpine
+    container_name: postgres-users
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user_user
+      POSTGRES_PASSWORD: user_password
+      POSTGRES_DB: user_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_user -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      JWT_SECRET: super-secret-demo-key-change-me
+      USER_DB_HOST: postgres-users
+      USER_DB_PORT: 5432
+      USER_DB_NAME: user_db
+      USER_DB_USER: user_user
+      USER_DB_PASSWORD: user_password
+    depends_on:
+      postgres-users:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+      JWT_SECRET: super-secret-demo-key-change-me
+      AUTH_SERVICE_URL: http://auth-service:3001
+      RATE_LIMIT_PER_MINUTE: 60
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
