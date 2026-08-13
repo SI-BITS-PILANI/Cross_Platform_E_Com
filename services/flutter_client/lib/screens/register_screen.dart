@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../theme/app_theme.dart';
 import '../widgets/gradient_background.dart';
 import '../widgets/auth_card.dart';
 import '../widgets/form_text_field.dart';
@@ -15,7 +16,8 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 enum PasswordStrength { weak, medium, strong, empty }
 
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -23,6 +25,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _agreeToTerms = false;
   PasswordStrength _strength = PasswordStrength.empty;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.2),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
@@ -30,6 +52,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -112,9 +135,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (form == null || !form.validate()) return;
     if (!_agreeToTerms) {
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to the Terms & Conditions'),
-          backgroundColor: Color(0xFFE74C3C),
+        SnackBar(
+          content: const Text('Please agree to the Terms & Conditions'),
+          backgroundColor: AppTheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
@@ -132,7 +159,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(error),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -150,135 +181,150 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, size: 20),
-          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: isLoading ? null : () => Navigator.of(context).pop(),
         ),
       ),
       body: GradientBackground(
         child: Padding(
           padding: EdgeInsets.only(bottom: keyboard),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AuthCard(
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Center(
-                        child: Text(
-                          'Create Account',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineLarge
-                              ?.copyWith(color: Colors.black87),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Center(
-                        child: Text(
-                          'Start your shopping journey',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      FormTextField(
-                        controller: _usernameController,
-                        label: 'Username',
-                        hint: 'johndoe',
-                        prefixIcon: Icons.person_outlined,
-                        keyboardType: TextInputType.name,
-                        validator: _validateUsername,
-                      ),
-                      const SizedBox(height: 20),
-                      FormTextField(
-                        controller: _emailController,
-                        label: 'Email',
-                        hint: 'john@example.com',
-                        prefixIcon: Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: _validateEmail,
-                      ),
-                      const SizedBox(height: 20),
-                      _buildPasswordField(),
-                      const SizedBox(height: 8),
-                      _buildPasswordStrengthIndicator(),
-                      const SizedBox(height: 12),
-                      FormTextField(
-                        controller: _confirmPasswordController,
-                        label: 'Confirm Password',
-                        hint: '••••••••',
-                        prefixIcon: Icons.lock_outline,
-                        obscureText: true,
-                        showVisibilityToggle: true,
-                        validator: _validateConfirmPassword,
-                        onChanged: (_) => _formKey.currentState?.validate(),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(
-                              value: _agreeToTerms,
-                              onChanged: isLoading
-                                  ? null
-                                  : (val) {
-                                      setState(() {
-                                        _agreeToTerms = val ?? false;
-                                      });
-                                    },
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text.rich(
-                              TextSpan(
-                                text: 'I agree to the ',
+                      AuthCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Center(
+                              child: Text(
+                                'Create Account',
                                 style: Theme.of(context)
                                     .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(fontSize: 13),
-                                children: [
-                                  TextSpan(
-                                    text: 'Terms & Conditions',
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                  ),
-                                  const TextSpan(text: ' and '),
-                                  TextSpan(
-                                    text: 'Privacy Policy',
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                  ),
-                                ],
+                                    .headlineLarge
+                                    ?.copyWith(color: AppTheme.onSurface),
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 6),
+                            Center(
+                              child: Text(
+                                'Start your shopping journey',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            FormTextField(
+                              controller: _usernameController,
+                              label: 'Username',
+                              hint: 'johndoe',
+                              prefixIcon: Icons.person_outline_rounded,
+                              keyboardType: TextInputType.name,
+                              validator: _validateUsername,
+                            ),
+                            const SizedBox(height: 20),
+                            FormTextField(
+                              controller: _emailController,
+                              label: 'Email',
+                              hint: 'john@example.com',
+                              prefixIcon: Icons.email_outlined,
+                              keyboardType: TextInputType.emailAddress,
+                              validator: _validateEmail,
+                            ),
+                            const SizedBox(height: 20),
+                            _buildPasswordField(),
+                            const SizedBox(height: 8),
+                            _buildPasswordStrengthIndicator(),
+                            const SizedBox(height: 12),
+                            FormTextField(
+                              controller: _confirmPasswordController,
+                              label: 'Confirm Password',
+                              hint: 'Re-enter your password',
+                              prefixIcon: Icons.lock_outline_rounded,
+                              obscureText: true,
+                              showVisibilityToggle: true,
+                              validator: _validateConfirmPassword,
+                              onChanged: (_) =>
+                                  _formKey.currentState?.validate(),
+                            ),
+                            const SizedBox(height: 20),
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: Checkbox(
+                                    value: _agreeToTerms,
+                                    onChanged: isLoading
+                                        ? null
+                                        : (val) {
+                                            setState(() {
+                                              _agreeToTerms = val ?? false;
+                                            });
+                                          },
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text.rich(
+                                    TextSpan(
+                                      text: 'I agree to the ',
+                                      style:
+                                          Theme.of(context).textTheme.bodyMedium,
+                                      children: [
+                                        TextSpan(
+                                          text: 'Terms & Conditions',
+                                          style: TextStyle(
+                                            color: AppTheme.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const TextSpan(text: ' and '),
+                                        TextSpan(
+                                          text: 'Privacy Policy',
+                                          style: TextStyle(
+                                            color: AppTheme.primary,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 28),
+                            PrimaryButton(
+                              label: isLoading ? 'Creating Account...' : 'Sign Up',
+                              onPressed: _handleRegister,
+                              isLoading: isLoading,
+                              enabled: !isLoading,
+                              icon: Icons.person_add_rounded,
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      PrimaryButton(
-                        label: isLoading ? 'Creating Account...' : 'Sign Up',
-                        onPressed: _handleRegister,
-                        isLoading: isLoading,
-                        enabled: !isLoading,
+                      const SizedBox(height: 20),
+                      TextButton(
+                        onPressed: isLoading
+                            ? null
+                            : () => Navigator.of(context).pop(),
+                        child: Text(
+                          'Already have an account? Sign In',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: isLoading
-                      ? null
-                      : () => Navigator.of(context).pop(),
-                  child: const Text('Already have an account? Sign In'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -290,8 +336,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     return FormTextField(
       controller: _passwordController,
       label: 'Password',
-      hint: '••••••••',
-      prefixIcon: Icons.lock_outline,
+      hint: 'Create a strong password',
+      prefixIcon: Icons.lock_outline_rounded,
       obscureText: true,
       showVisibilityToggle: true,
       validator: _validatePassword,
@@ -312,9 +358,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     };
 
     final color = switch (_strength) {
-      PasswordStrength.weak => const Color(0xFFE74C3C),
-      PasswordStrength.medium => const Color(0xFFFF9F43),
-      PasswordStrength.strong => const Color(0xFF27AE60),
+      PasswordStrength.weak => AppTheme.error,
+      PasswordStrength.medium => AppTheme.warning,
+      PasswordStrength.strong => AppTheme.success,
       PasswordStrength.empty => Colors.transparent,
     };
 
@@ -330,19 +376,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       children: [
         Text(
           'Password Strength: $label',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: Container(
             height: 4,
             width: double.infinity,
-            decoration: BoxDecoration(color: Colors.grey.shade300),
-            child: FractionallySizedBox(
+            decoration: BoxDecoration(color: AppTheme.textFieldBorder),
+            child: AnimatedFractionallySizedBox(
               widthFactor: barWidth,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
               child: Container(
-                decoration: BoxDecoration(color: color),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color.withOpacity(0.8), color],
+                  ),
+                ),
               ),
             ),
           ),

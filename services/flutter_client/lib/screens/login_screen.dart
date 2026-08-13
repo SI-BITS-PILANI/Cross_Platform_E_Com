@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../theme/app_theme.dart';
 import '../widgets/gradient_background.dart';
 import '../widgets/auth_card.dart';
 import '../widgets/form_text_field.dart';
@@ -15,17 +16,39 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
   bool _showDemoCredentials = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -60,7 +83,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         messenger.showSnackBar(
           SnackBar(
             content: Text(error),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -77,134 +104,165 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: GradientBackground(
         child: Padding(
           padding: EdgeInsets.only(bottom: keyboard),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AuthCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(
-                        child: Text(
-                          'Welcome Back',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineLarge
-                              ?.copyWith(
-                                color: Colors.black87,
-                              ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Center(
-                        child: Text(
-                          'Enter your credentials to sign in',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      FormTextField(
-                        controller: _usernameController,
-                        label: 'Username',
-                        hint: 'alice',
-                        prefixIcon: Icons.person_outlined,
-                        keyboardType: TextInputType.name,
-                        validator: _validateUsername,
-                      ),
-                      const SizedBox(height: 20),
-                      FormTextField(
-                        controller: _passwordController,
-                        label: 'Password',
-                        hint: '••••••••',
-                        prefixIcon: Icons.lock_outline,
-                        obscureText: true,
-                        showVisibilityToggle: true,
-                        validator: _validatePassword,
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AuthCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          Center(
+                            child: Text(
+                              'Welcome Back',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineLarge
+                                  ?.copyWith(
+                                    color: AppTheme.onSurface,
+                                  ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Center(
+                            child: Text(
+                              'Sign in to continue shopping',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          FormTextField(
+                            controller: _usernameController,
+                            label: 'Username',
+                            hint: 'Enter your username',
+                            prefixIcon: Icons.person_outline_rounded,
+                            keyboardType: TextInputType.name,
+                            validator: _validateUsername,
+                          ),
+                          const SizedBox(height: 20),
+                          FormTextField(
+                            controller: _passwordController,
+                            label: 'Password',
+                            hint: 'Enter your password',
+                            prefixIcon: Icons.lock_outline_rounded,
+                            obscureText: true,
+                            showVisibilityToggle: true,
+                            validator: _validatePassword,
+                          ),
+                          const SizedBox(height: 20),
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: Checkbox(
-                                  value: _rememberMe,
-                                  onChanged: (val) {
-                                    setState(() {
-                                      _rememberMe = val ?? false;
-                                    });
-                                  },
-                                ),
+                              Row(
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: Checkbox(
+                                      value: _rememberMe,
+                                      onChanged: (val) {
+                                        setState(() {
+                                          _rememberMe = val ?? false;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Remember me',
+                                    style: Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Remember me',
-                                style:
-                                    Theme.of(context).textTheme.bodyMedium,
+                              TextButton(
+                                onPressed: isLoading
+                                    ? null
+                                    : () {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                'Password reset is not yet available. Please contact support.'),
+                                            backgroundColor: AppTheme.error,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12)),
+                                          ),
+                                        );
+                                      },
+                                child: Text(
+                                  'Forgot Password?',
+                                  style: TextStyle(
+                                    color: AppTheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 28),
+                          PrimaryButton(
+                            label: isLoading ? 'Signing In...' : 'Sign In',
+                            onPressed: _handleLogin,
+                            isLoading: isLoading,
+                            enabled: !isLoading,
+                            icon: Icons.login_rounded,
+                          ),
+                          const SizedBox(height: 20),
+                          if (_showDemoCredentials) ...[
+                            const DemoCredentialsCard(),
+                            const SizedBox(height: 16),
+                          ],
                           TextButton(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Password reset is not yet available. Please contact support.'),
-                                ),
-                              );
-                            },
-                            child: const Text('Forgot Password?'),
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    setState(() {
+                                      _showDemoCredentials =
+                                          !_showDemoCredentials;
+                                    });
+                                  },
+                            child: Text(
+                              _showDemoCredentials
+                                  ? 'Hide Demo Credentials'
+                                  : 'Show Demo Credentials',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 13,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      PrimaryButton(
-                        label: isLoading ? 'Signing In...' : 'Sign In',
-                        onPressed: _handleLogin,
-                        isLoading: isLoading,
-                        enabled: !isLoading,
-                      ),
-                      const SizedBox(height: 16),
-                      if (_showDemoCredentials)...[
-                        const DemoCredentialsCard(),
-                        const SizedBox(height: 16),
-                      ],
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _showDemoCredentials = !_showDemoCredentials;
-                          });
-                        },
-                        child: Text(
-                          _showDemoCredentials
-                              ? 'Hide Demo Credentials'
-                              : 'Show Demo Credentials',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                          ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextButton(
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const RegisterScreen(),
+                                ),
+                              );
+                            },
+                      child: Text(
+                        'Don\'t have an account? Sign Up',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const RegisterScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text('Don\u2019t have an account? Sign Up'),
-                ),
-              ],
+              ),
             ),
           ),
         ),

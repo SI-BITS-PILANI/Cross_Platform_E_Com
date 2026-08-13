@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class FormTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -28,54 +29,119 @@ class FormTextField extends StatefulWidget {
   State<FormTextField> createState() => _FormTextFieldState();
 }
 
-class _FormTextFieldState extends State<FormTextField> {
+class _FormTextFieldState extends State<FormTextField>
+    with SingleTickerProviderStateMixin {
   late bool _obscured;
+  late FocusNode _focusNode;
+  bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
     _obscured = widget.obscureText;
+    _focusNode = FocusNode();
+    _focusNode.addListener(() {
+      setState(() => _isFocused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final borderColor = _isFocused
+        ? AppTheme.primary
+        : AppTheme.textFieldBorder;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w600,
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: borderColor,
+              width: _isFocused ? 2 : 1,
+            ),
+          ),
+          child: TextFormField(
+            controller: widget.controller,
+            obscureText: _obscured,
+            focusNode: _focusNode,
+            keyboardType: widget.keyboardType,
+            validator: widget.validator,
+            onChanged: widget.onChanged,
+            style: theme.textTheme.bodyLarge,
+            decoration: InputDecoration(
+              hintText: widget.hint,
+              hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: AppTheme.onSurfaceVariant,
               ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: widget.controller,
-          obscureText: _obscured,
-          keyboardType: widget.keyboardType,
-          validator: widget.validator,
-          onChanged: widget.onChanged,
-          decoration: InputDecoration(
-            hintText: widget.hint,
-            prefixIcon: widget.prefixIcon != null
-                ? Icon(widget.prefixIcon, size: 20)
-                : null,
-            suffixIcon: widget.showVisibilityToggle
-                ? IconButton(
-                    icon: Icon(
-                      _obscured
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      size: 20,
-                    ),
-                    onPressed: () {
-                      setState(() => _obscured = !_obscured);
-                    },
-                  )
-                : null,
+              prefixIcon: widget.prefixIcon != null
+                  ? Container(
+                      margin: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _isFocused
+                            ? AppTheme.primary.withOpacity(0.1)
+                            : AppTheme.textFieldFill,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        widget.prefixIcon,
+                        size: 20,
+                        color: _isFocused ? AppTheme.primary : AppTheme.onSurfaceVariant,
+                      ),
+                    )
+                  : null,
+              suffixIcon: widget.showVisibilityToggle
+                  ? IconButton(
+                      icon: Icon(
+                        _obscured
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        size: 20,
+                        color: _isFocused ? AppTheme.primary : AppTheme.onSurfaceVariant,
+                      ),
+                      onPressed: () {
+                        setState(() => _obscured = !_obscured);
+                      },
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            ),
           ),
         ),
+        if (widget.validator != null) ...[
+          const SizedBox(height: 6),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 150),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Text(
+                _getErrorText(context) ?? '',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppTheme.error,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
+  }
+
+  String? _getErrorText(BuildContext context) {
+    final field = widget.controller.text;
+    if (field.isEmpty) return null;
+    final error = widget.validator?.call(field);
+    return error;
   }
 }
