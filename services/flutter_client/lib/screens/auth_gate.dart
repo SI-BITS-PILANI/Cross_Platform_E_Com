@@ -24,8 +24,36 @@ class AuthGate extends ConsumerWidget {
   }
 }
 
-class _LoadingScreen extends StatelessWidget {
+class _LoadingScreen extends StatefulWidget {
   const _LoadingScreen();
+
+  @override
+  State<_LoadingScreen> createState() => _LoadingScreenState();
+}
+
+class _LoadingScreenState extends State<_LoadingScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+    _pulseController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,33 +62,50 @@ class _LoadingScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(30),
-                    blurRadius: 20,
+            ScaleTransition(
+              scale: _pulseAnimation,
+              child: Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
-              ),
-              child: const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primary.withValues(alpha: 0.4),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.shopping_bag_rounded,
+                  color: Colors.white,
+                  size: 32,
                 ),
               ),
             ),
             const SizedBox(height: 24),
             Text(
-              'ShopFlow',
+              'ShopEase',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
+                    letterSpacing: -0.5,
                   ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
             ),
           ],
         ),

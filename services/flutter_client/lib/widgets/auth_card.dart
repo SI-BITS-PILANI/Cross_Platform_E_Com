@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 class AuthCard extends StatelessWidget {
   final Widget child;
@@ -15,28 +16,41 @@ class AuthCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = width ?? (screenWidth < 600 ? screenWidth * 0.92 : 440);
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+    final isDesktop = screenWidth >= 1024;
+
+    final cardWidth = width ??
+        (isDesktop
+            ? 460.0
+            : isTablet
+                ? 480.0
+                : screenWidth * 0.92);
+
+    final verticalPadding = isDesktop ? 48.0 : isTablet ? 44.0 : 40.0;
+    final horizontalPadding = isDesktop ? 48.0 : isTablet ? 44.0 : 32.0;
+    final borderRadius = isDesktop ? 32.0 : isTablet ? 28.0 : 24.0;
+    final shadowBlur = isDesktop ? 50.0 : isTablet ? 40.0 : 30.0;
 
     return Container(
       width: cardWidth,
       padding: padding ??
-          const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+          EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(28),
+        color: Colors.white.withValues(alpha: 0.97),
+        borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: Colors.white.withOpacity(0.3),
+          color: Colors.white.withValues(alpha: 0.35),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 40,
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: shadowBlur,
             offset: const Offset(0, 20),
           ),
           BoxShadow(
-            color: const Color(0xFF6366F1).withOpacity(0.15),
-            blurRadius: 60,
+            color: AppTheme.primary.withValues(alpha: 0.12),
+            blurRadius: shadowBlur + 10,
             offset: const Offset(0, 10),
           ),
         ],

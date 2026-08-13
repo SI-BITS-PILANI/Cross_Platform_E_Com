@@ -176,19 +176,19 @@ class AppTheme {
         height: 1.3,
         letterSpacing: -0.3,
       ),
-      bodyLarge: GoogleFonts.poppins(
+      bodyLarge: GoogleFonts.inter(
         fontSize: 16,
         fontWeight: FontWeight.w500,
         color: baseColor,
         height: 1.5,
       ),
-      bodyMedium: GoogleFonts.poppins(
+      bodyMedium: GoogleFonts.inter(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         color: mutedColor,
         height: 1.5,
       ),
-      bodySmall: GoogleFonts.poppins(
+      bodySmall: GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w400,
         color: mutedColor,

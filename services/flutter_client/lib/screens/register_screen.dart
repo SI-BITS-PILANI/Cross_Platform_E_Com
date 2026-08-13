@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/adaptive_auth_layout.dart';
+import '../widgets/brand_header.dart';
 import '../widgets/gradient_background.dart';
 import '../widgets/auth_card.dart';
 import '../widgets/form_text_field.dart';
@@ -23,8 +25,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _usernameFieldKey = GlobalKey<FormTextFieldState>();
+  final _emailFieldKey = GlobalKey<FormTextFieldState>();
+  final _passwordFieldKey = GlobalKey<FormTextFieldState>();
+  final _confirmPasswordFieldKey = GlobalKey<FormTextFieldState>();
   bool _agreeToTerms = false;
   PasswordStrength _strength = PasswordStrength.empty;
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -33,16 +40,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
+      begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
     _animationController.forward();
   }
 
@@ -132,7 +139,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     final messenger = ScaffoldMessenger.of(context);
     final form = _formKey.currentState;
 
-    if (form == null || !form.validate()) return;
+    if (form == null || !form.validate()) {
+      _usernameFieldKey.currentState?.triggerShake();
+      _emailFieldKey.currentState?.triggerShake();
+      _passwordFieldKey.currentState?.triggerShake();
+      _confirmPasswordFieldKey.currentState?.triggerShake();
+      return;
+    }
     if (!_agreeToTerms) {
       messenger.showSnackBar(
         SnackBar(
@@ -192,123 +205,194 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             opacity: _fadeAnimation,
             child: SlideTransition(
               position: _slideAnimation,
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
+              child: AdaptiveAuthLayout(
+                brandPane: AdaptiveAuthLayout.isDesktop(context)
+                    ? const BrandHeader()
+                    : const SizedBox.shrink(),
+                formPane: SingleChildScrollView(
                   child: Column(
                     children: [
+                      if (!AdaptiveAuthLayout.isDesktop(context)) ...[
+                        _buildMobileHeader(),
+                        const SizedBox(height: 32),
+                      ],
                       AuthCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Center(
-                              child: Text(
-                                'Create Account',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineLarge
-                                    ?.copyWith(color: AppTheme.onSurface),
+                        child: Form(
+                          key: _formKey,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                            if (AdaptiveAuthLayout.isDesktop(context)) ...[
+                              Center(
+                                child: Text(
+                                  'Create Account',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineLarge
+                                      ?.copyWith(color: AppTheme.onSurface),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Center(
+                                child: Text(
+                                  'Start your shopping journey',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+                            ],
+                            _AnimatedFormField(
+                              delay: 100,
+                              child: FormTextField(
+                                key: _usernameFieldKey,
+                                controller: _usernameController,
+                                label: 'Username',
+                                hint: 'johndoe',
+                                prefixIcon: Icons.person_outline_rounded,
+                                keyboardType: TextInputType.name,
+                                validator: _validateUsername,
+                                onChanged: (_) =>
+                                    ref.read(authProvider.notifier).clearError(),
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            Center(
-                              child: Text(
-                                'Start your shopping journey',
-                                style: Theme.of(context).textTheme.bodyMedium,
+                            const SizedBox(height: 20),
+                            _AnimatedFormField(
+                              delay: 180,
+                              child: FormTextField(
+                                key: _emailFieldKey,
+                                controller: _emailController,
+                                label: 'Email',
+                                hint: 'john@example.com',
+                                prefixIcon: Icons.email_outlined,
+                                keyboardType: TextInputType.emailAddress,
+                                validator: _validateEmail,
                               ),
                             ),
-                            const SizedBox(height: 32),
-                            FormTextField(
-                              controller: _usernameController,
-                              label: 'Username',
-                              hint: 'johndoe',
-                              prefixIcon: Icons.person_outline_rounded,
-                              keyboardType: TextInputType.name,
-                              validator: _validateUsername,
-                            ),
                             const SizedBox(height: 20),
-                            FormTextField(
-                              controller: _emailController,
-                              label: 'Email',
-                              hint: 'john@example.com',
-                              prefixIcon: Icons.email_outlined,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: _validateEmail,
+                            _AnimatedFormField(
+                              delay: 260,
+                              child: FormTextField(
+                                key: _passwordFieldKey,
+                                controller: _passwordController,
+                                label: 'Password',
+                                hint: 'Create a strong password',
+                                prefixIcon: Icons.lock_outline_rounded,
+                                obscureText: true,
+                                showVisibilityToggle: true,
+                                validator: _validatePassword,
+                                onChanged: _evaluateStrength,
+                                passwordRequirements: const [
+                                  'At least 8 characters',
+                                  'Upper and lowercase letters',
+                                  'Contains a number',
+                                  'Contains special character',
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 20),
-                            _buildPasswordField(),
                             const SizedBox(height: 8),
                             _buildPasswordStrengthIndicator(),
                             const SizedBox(height: 12),
-                            FormTextField(
-                              controller: _confirmPasswordController,
-                              label: 'Confirm Password',
-                              hint: 'Re-enter your password',
-                              prefixIcon: Icons.lock_outline_rounded,
-                              obscureText: true,
-                              showVisibilityToggle: true,
-                              validator: _validateConfirmPassword,
-                              onChanged: (_) =>
-                                  _formKey.currentState?.validate(),
+                            _AnimatedFormField(
+                              delay: 340,
+                              child: FormTextField(
+                                key: _confirmPasswordFieldKey,
+                                controller: _confirmPasswordController,
+                                label: 'Confirm Password',
+                                hint: 'Re-enter your password',
+                                prefixIcon: Icons.lock_outline_rounded,
+                                obscureText: true,
+                                showVisibilityToggle: true,
+                                validator: _validateConfirmPassword,
+                                onChanged: (_) =>
+                                    _formKey.currentState?.validate(),
+                              ),
                             ),
                             const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: Checkbox(
-                                    value: _agreeToTerms,
-                                    onChanged: isLoading
-                                        ? null
-                                        : (val) {
-                                            setState(() {
-                                              _agreeToTerms = val ?? false;
-                                            });
-                                          },
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text.rich(
-                                    TextSpan(
-                                      text: 'I agree to the ',
-                                      style:
-                                          Theme.of(context).textTheme.bodyMedium,
-                                      children: [
-                                        TextSpan(
-                                          text: 'Terms & Conditions',
-                                          style: TextStyle(
-                                            color: AppTheme.primary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                            _AnimatedFormField(
+                              delay: 400,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(7),
+                                      border: Border.all(
+                                        color: _agreeToTerms
+                                            ? AppTheme.primary
+                                            : AppTheme.textFieldBorder,
+                                        width: 2,
+                                      ),
+                                      color: _agreeToTerms
+                                          ? AppTheme.primary
+                                          : Colors.transparent,
+                                    ),
+                                    child: GestureDetector(
+                                      onTap: isLoading
+                                          ? null
+                                          : () {
+                                              setState(() {
+                                                _agreeToTerms = !_agreeToTerms;
+                                              });
+                                            },
+                                      child: AnimatedOpacity(
+                                        duration: const Duration(milliseconds: 150),
+                                        opacity: _agreeToTerms ? 1 : 0,
+                                        child: const Icon(
+                                          Icons.check_rounded,
+                                          size: 16,
+                                          color: Colors.white,
                                         ),
-                                        const TextSpan(text: ' and '),
-                                        TextSpan(
-                                          text: 'Privacy Policy',
-                                          style: TextStyle(
-                                            color: AppTheme.primary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text.rich(
+                                      TextSpan(
+                                        text: 'I agree to the ',
+                                        style:
+                                            Theme.of(context).textTheme.bodyMedium,
+                                        children: [
+                                          TextSpan(
+                                            text: 'Terms & Conditions',
+                                            style: TextStyle(
+                                              color: AppTheme.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const TextSpan(text: ' and '),
+                                          TextSpan(
+                                            text: 'Privacy Policy',
+                                            style: TextStyle(
+                                              color: AppTheme.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 28),
-                            PrimaryButton(
-                              label: isLoading ? 'Creating Account...' : 'Sign Up',
-                              onPressed: _handleRegister,
-                              isLoading: isLoading,
-                              enabled: !isLoading,
-                              icon: Icons.person_add_rounded,
+                            _AnimatedFormField(
+                              delay: 460,
+                              child: PrimaryButton(
+                                label: isLoading ? 'Creating Account...' : 'Sign Up',
+                                onPressed: _handleRegister,
+                                isLoading: isLoading,
+                                enabled: !isLoading,
+                                icon: Icons.person_add_rounded,
+                              ),
                             ),
                           ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                         ),
+                       ),
+                     ),
+                       const SizedBox(height: 20),
                       TextButton(
                         onPressed: isLoading
                             ? null
@@ -316,32 +400,69 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         child: Text(
                           'Already have an account? Sign In',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+                     ],
+                   ),
+                 ),
+               ),
+             ),
+           ),
+         ),
+       ),
+     );
   }
 
-  Widget _buildPasswordField() {
-    return FormTextField(
-      controller: _passwordController,
-      label: 'Password',
-      hint: 'Create a strong password',
-      prefixIcon: Icons.lock_outline_rounded,
-      obscureText: true,
-      showVisibilityToggle: true,
-      validator: _validatePassword,
-      onChanged: _evaluateStrength,
+  Widget _buildMobileHeader() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.shopping_bag_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'ShopEase',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Create your account',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.85),
+          ),
+        ),
+      ],
     );
   }
 
@@ -395,7 +516,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color.withOpacity(0.8), color],
+                    colors: [color.withValues(alpha: 0.8), color],
                   ),
                 ),
               ),
@@ -403,6 +524,35 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AnimatedFormField extends StatelessWidget {
+  final int delay;
+  final Widget child;
+
+  const _AnimatedFormField({
+    required this.delay,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+      tween: Tween(begin: 0, end: 1),
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

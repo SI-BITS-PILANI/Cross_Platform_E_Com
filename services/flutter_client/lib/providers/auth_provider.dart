@@ -140,6 +140,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _tokenStorage.clearToken();
     state = AuthState(status: AuthStatus.unauthenticated);
   }
+
+  void clearError() {
+    state = state.copyWith(error: null);
+  }
 }
 
 final tokenStorageProvider = Provider<TokenStorage>((ref) {

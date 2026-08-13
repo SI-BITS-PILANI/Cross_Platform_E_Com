@@ -14,7 +14,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ShopFlow',
+      title: 'ShopEase',
       theme: AppTheme.lightTheme,
       home: const AuthGate(),
       debugShowCheckedModeBanner: false,

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
@@ -27,41 +28,47 @@ class PrimaryButton extends StatefulWidget {
 }
 
 class _PrimaryButtonState extends State<PrimaryButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
+    with TickerProviderStateMixin {
+  late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
+  late AnimationController _shimmerController;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 100),
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 120),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
     );
+    _shimmerController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _scaleController.dispose();
+    _shimmerController.dispose();
     super.dispose();
   }
 
   void _handleTapDown(TapDownDetails details) {
     if (widget.enabled && !widget.isLoading) {
       HapticFeedback.lightImpact();
-      _animationController.forward();
+      _scaleController.forward();
     }
   }
 
   void _handleTapUp(TapUpDetails details) {
-    _animationController.reverse();
+    _scaleController.reverse();
   }
 
   void _handleTapCancel() {
-    _animationController.reverse();
+    _scaleController.reverse();
   }
 
   @override
@@ -90,7 +97,7 @@ class _PrimaryButtonState extends State<PrimaryButton>
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.3),
+                      color: AppTheme.primary.withValues(alpha: 0.35),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -104,13 +111,8 @@ class _PrimaryButtonState extends State<PrimaryButton>
               borderRadius: BorderRadius.circular(16),
               child: Center(
                 child: widget.isLoading
-                    ? SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
+                    ? _ShimmerLoader(
+                        shimmerController: _shimmerController,
                       )
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -136,6 +138,41 @@ class _PrimaryButtonState extends State<PrimaryButton>
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ShimmerLoader extends StatelessWidget {
+  final AnimationController shimmerController;
+
+  const _ShimmerLoader({required this.shimmerController});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: shimmerController,
+      builder: (context, child) {
+        final shimmerValue = shimmerController.value;
+        return Container(
+          width: 100,
+          height: 20,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withValues(alpha: 0.3),
+                Colors.white.withValues(alpha: 0.7),
+                Colors.white.withValues(alpha: 0.3),
+              ],
+              stops: [
+                math.max(0, shimmerValue - 0.3),
+                shimmerValue,
+                math.min(1, shimmerValue + 0.3),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
