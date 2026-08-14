@@ -76,9 +76,9 @@ class _PrimaryButtonState extends State<PrimaryButton>
     final isActive = widget.enabled && !widget.isLoading;
     final buttonGradient = widget.gradient ??
         const LinearGradient(
-          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [Color(0xFFfbb448), Color(0xFFf7892b)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         );
 
     return ScaleTransition(

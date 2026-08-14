@@ -13,10 +13,10 @@ class DemoCredentialsCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.06),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppTheme.primary.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -25,24 +25,17 @@ class DemoCredentialsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.info_outline_rounded,
-                  size: 16,
-                  color: AppTheme.primary,
-                ),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 16,
+                color: Colors.white.withValues(alpha: 0.9),
               ),
               const SizedBox(width: 10),
               Text(
                 'Demo Credentials',
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.primary,
+                  color: Colors.white,
                   fontSize: 13,
                 ),
               ),
@@ -104,19 +97,15 @@ class _CredentialRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: AppTheme.textFieldBorder,
-            width: 1,
-          ),
         ),
         child: Row(
           children: [
             Icon(
               Icons.person_outline_rounded,
               size: 16,
-              color: AppTheme.onSurfaceVariant,
+              color: Colors.white.withValues(alpha: 0.8),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -125,19 +114,20 @@ class _CredentialRow extends StatelessWidget {
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w500,
                   fontSize: 13,
+                  color: Colors.white,
                 ),
               ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.08),
+                color: AppTheme.accent.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 roles,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.primary,
+                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 11,
                 ),
@@ -147,7 +137,7 @@ class _CredentialRow extends StatelessWidget {
             Icon(
               Icons.copy_rounded,
               size: 16,
-              color: AppTheme.onSurfaceVariant,
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ],
         ),

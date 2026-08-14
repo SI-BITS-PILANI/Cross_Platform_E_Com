@@ -69,7 +69,7 @@ class _LoadingScreenState extends State<_LoadingScreen>
                 height: 64,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    colors: [Color(0xFFfbb448), Color(0xFFf7892b)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
