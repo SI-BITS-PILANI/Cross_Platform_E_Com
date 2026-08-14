@@ -13,14 +13,44 @@ class AuthGate extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authStatus = ref.watch(authStatusProvider);
 
+    Widget screen;
     switch (authStatus) {
       case AuthStatus.unknown:
-        return const _LoadingScreen();
+        screen = const _LoadingScreen();
       case AuthStatus.authenticated:
-        return const HomeScreen();
+        screen = const HomeScreen();
       case AuthStatus.unauthenticated:
-        return const LoginScreen();
+        screen = const LoginScreen();
     }
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      switchInCurve: Curves.easeInOut,
+      switchOutCurve: Curves.easeInOut,
+      layoutBuilder: (Widget? currentChild, List<Widget> previousChildren) {
+        return Stack(
+          children: <Widget>[
+            ...previousChildren,
+            if (currentChild != null) currentChild,
+          ],
+        );
+      },
+      transitionBuilder: (child, animation) {
+        final fade = Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+        );
+        final slide = Tween<Offset>(
+          begin: const Offset(0.0, 0.012),
+          end: Offset.zero,
+        ).chain(CurveTween(curve: Curves.easeInOut)).animate(animation);
+
+        return FadeTransition(
+          opacity: fade,
+          child: SlideTransition(position: slide, child: child),
+        );
+      },
+      child: KeyedSubtree(key: ValueKey(authStatus), child: screen),
+    );
   }
 }
 

@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../widgets/bezier_container.dart';
 import '../widgets/form_text_field.dart';
 import '../widgets/primary_button.dart';
+import '../navigation/smooth_page_route.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -233,9 +234,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ? null
               : () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RegisterScreen(),
-                    ),
+                    SmoothPageRoute.push(context, const RegisterScreen()),
                   );
                 },
           child: Text(
