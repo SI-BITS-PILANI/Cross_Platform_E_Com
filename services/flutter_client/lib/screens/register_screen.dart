@@ -176,10 +176,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Form(
-                key: _formKey,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                child: Column(
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  child: Column(
                   children: <Widget>[
                     SizedBox(height: height * 0.2),
                     _buildTitle(),
@@ -406,8 +406,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             color: Colors.black,
           ),
         ),
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+        const SizedBox(width: 10),
+        InkWell(
+          onTap: _isLoading ? null : () => Navigator.of(context).pop(),
           child: Text(
             'Sign In',
             style: TextStyle(

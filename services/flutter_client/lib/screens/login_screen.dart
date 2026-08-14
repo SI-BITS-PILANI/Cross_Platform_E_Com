@@ -93,10 +93,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Form(
-                key: _formKey,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                child: Column(
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  child: Column(
                   children: <Widget>[
                     SizedBox(height: height * 0.2),
                     _buildTitle(),
@@ -227,8 +227,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             color: Colors.black,
           ),
         ),
-        TextButton(
-          onPressed: _isLoading
+        const SizedBox(width: 10),
+        InkWell(
+          onTap: _isLoading
               ? null
               : () {
                   Navigator.of(context).push(

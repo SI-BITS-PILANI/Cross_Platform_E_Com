@@ -119,23 +119,6 @@ class FormTextFieldState extends State<FormTextField>
             ),
           ),
         ),
-        if (widget.validator != null) ...[
-          const SizedBox(height: 6),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 150),
-            curve: Curves.easeInOut,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 12),
-              child: Text(
-                widget.validator!(widget.controller.text) ?? '',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppTheme.error,
-                  height: 1.3,
-                ),
-              ),
-            ),
-          ),
-        ],
         if (isPassword && requirements != null && requirements.isNotEmpty) ...[
           const SizedBox(height: 10),
           _buildPasswordRequirements(requirements),
