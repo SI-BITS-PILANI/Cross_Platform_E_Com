@@ -8,6 +8,7 @@ import { createRateLimiter } from "./middleware/rateLimit.js";
 import { getAggregatedHealth } from "./health/aggregator.js";
 import { errorHandler } from "./errors/errorHandler.js";
 import { createAuthProxy } from "./proxy/auth.js";
+import { createCatalogProxy } from "./proxy/catalog.js";
 
 export function createApp() {
   const app = express();
@@ -22,6 +23,8 @@ export function createApp() {
   );
 
   app.use("/auth", createAuthProxy());
+  app.use("/api/v1/products", createCatalogProxy());
+  app.use("/api/v2/products", createCatalogProxy());
 
   app.get("/health", (_request, response) => {
     response.status(200).json({
@@ -46,8 +49,7 @@ export function createApp() {
     });
   });
 
-  // Placeholder: other teams will add proxy routes here
-  // e.g. app.use("/api/v1/catalog", catalogProxy)
+  // Placeholder: other teams will add additional proxy routes here
   // e.g. app.use("/api/v1/orders", orderProxy)
 
   app.use(errorHandler);

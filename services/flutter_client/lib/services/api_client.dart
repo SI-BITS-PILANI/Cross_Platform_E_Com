@@ -48,6 +48,33 @@ class ApiClient {
     return _processResponse(response);
   }
 
+  Future<List<dynamic>> getListJson(
+    String path, {
+    String? token,
+  }) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final headers = <String, String>{};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final response = await _client.get(uri, headers: headers);
+    final body = jsonDecode(response.body);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (body is List<dynamic>) {
+        return body;
+      }
+      throw const FormatException('Expected a list response body');
+    }
+
+    if (body is Map<String, dynamic>) {
+      throw AuthError.fromJson(body);
+    }
+
+    throw Exception('Request failed with status ${response.statusCode}');
+  }
+
   Map<String, dynamic> _processResponse(http.Response response) {
     final body = jsonDecode(response.body) as Map<String, dynamic>;
 

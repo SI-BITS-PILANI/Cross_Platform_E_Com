@@ -44,6 +44,41 @@ services:
       timeout: 5s
       retries: 5
 
+  catalog-mongo:
+    image: mongo:7
+    container_name: catalog-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  catalog-service:
+    build:
+      context: ./services/catalog-service
+      dockerfile: Dockerfile
+    container_name: catalog-service
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+      - "50051:50051"
+    environment:
+      MONGO_URI: mongodb://catalog-mongo:27017
+      DB_NAME: catalog_db
+      REST_PORT: 8001
+      GRPC_PORT: 50051
+    depends_on:
+      catalog-mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api-gateway:
     build:
       context: ./services/api-gateway
@@ -56,9 +91,12 @@ services:
       PORT: 8000
       JWT_SECRET: super-secret-demo-key-change-me
       AUTH_SERVICE_URL: http://auth-service:3001
+      CATALOG_SERVICE_URL: http://catalog-service:8001
       RATE_LIMIT_PER_MINUTE: 60
     depends_on:
       auth-service:
+        condition: service_healthy
+      catalog-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8000/health || exit 1"]
