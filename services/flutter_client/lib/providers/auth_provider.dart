@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user.dart';
 import '../models/auth_response.dart';
@@ -55,6 +57,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return;
     }
 
+    state = state.copyWith(status: AuthStatus.unknown, token: token);
+    await _tryRestoreUser(token);
+  }
+
+  Future<void> _tryRestoreUser(String token) async {
     try {
       final meResponse = await _authService.getCurrentUser(token);
       final userData = meResponse['user'] as Map<String, dynamic>?;
@@ -65,12 +72,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
           user: User.fromJson(userData),
         );
       } else {
-        state = state.copyWith(status: AuthStatus.unauthenticated);
         await _tokenStorage.clearToken();
+        state = AuthState(status: AuthStatus.unauthenticated);
       }
-    } catch (_) {
-      state = state.copyWith(status: AuthStatus.unauthenticated);
+    } on AuthError catch (_) {
       await _tokenStorage.clearToken();
+      state = AuthState(status: AuthStatus.unauthenticated);
+    } catch (_) {
+      state = state.copyWith(status: AuthStatus.unknown, token: token);
     }
   }
 

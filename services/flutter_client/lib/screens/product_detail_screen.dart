@@ -98,28 +98,30 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x22000000),
-                  blurRadius: 24,
-                  offset: Offset(0, 10),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: AspectRatio(
-                aspectRatio: 1.05,
-                child: ProductImage(
-                  imageUrl: product.imageUrl,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
+           Container(
+             height: 260,
+             decoration: BoxDecoration(
+               borderRadius: BorderRadius.circular(24),
+               boxShadow: const [
+                 BoxShadow(
+                   color: Color(0x22000000),
+                   blurRadius: 24,
+                   offset: Offset(0, 10),
+                 ),
+               ],
+             ),
+             child: ClipRRect(
+               borderRadius: BorderRadius.circular(24),
+               child: Container(
+                 width: double.infinity,
+                 color: const Color(0xFFF4F6FB),
+                 child: ProductImage(
+                   imageUrl: product.imageUrl,
+                   fit: BoxFit.contain,
+                 ),
+               ),
+             ),
+           ),
           const SizedBox(height: 18),
           Row(
             children: [

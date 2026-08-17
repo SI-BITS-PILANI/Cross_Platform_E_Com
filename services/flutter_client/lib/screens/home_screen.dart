@@ -36,7 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: RefreshIndicator(
         onRefresh: () => ref.read(productCatalogProvider.notifier).loadProducts(),
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 56, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
           children: [
             Row(
               children: [
@@ -153,7 +153,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(height: 14),
             SizedBox(
-              height: 42,
+              height: 46,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
@@ -162,7 +162,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   final category = categories[index];
                   final isSelected = category == catalogState.selectedCategory;
                   return ChoiceChip(
-                    label: Text(category),
+                    label: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(category),
+                    ),
                     selected: isSelected,
                     onSelected: (_) {
                       ref.read(productCatalogProvider.notifier).setCategory(category);
@@ -185,39 +188,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 padding: EdgeInsets.symmetric(vertical: 24),
                 child: Center(child: CircularProgressIndicator()),
               )
-            else if (catalogState.error != null)
-              _ErrorCard(
-                message: catalogState.error!,
-                onRetry: () => ref.read(productCatalogProvider.notifier).loadProducts(),
-              )
-            else if (products.isEmpty)
-              const _EmptyCatalogCard()
-            else
-              GridView.builder(
-                itemCount: products.length,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.52,
-                ),
-                itemBuilder: (context, index) {
-                  final product = products[index];
-                  return _ProductCard(
-                    product: product,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        SmoothPageRoute.push(
-                          context,
-                          ProductDetailScreen(productId: product.productId),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+             else if (catalogState.error != null)
+               _ErrorCard(
+                 message: catalogState.error!,
+                 onRetry: () => ref.read(productCatalogProvider.notifier).loadProducts(),
+               )
+             else if (products.isEmpty)
+               const _EmptyCatalogCard()
+             else
+               LayoutBuilder(
+                 builder: (context, constraints) {
+                   int crossAxisCount;
+                   final width = constraints.maxWidth;
+                   if (width < 600) {
+                     crossAxisCount = 2;
+                   } else if (width < 900) {
+                     crossAxisCount = 3;
+                   } else {
+                     crossAxisCount = 4;
+                   }
+
+                   return GridView.builder(
+                     itemCount: products.length,
+                     shrinkWrap: true,
+                     physics: const NeverScrollableScrollPhysics(),
+                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                       crossAxisCount: crossAxisCount,
+                       mainAxisSpacing: 16,
+                       crossAxisSpacing: 16,
+                       childAspectRatio: 0.68,
+                     ),
+                     itemBuilder: (context, index) {
+                       final product = products[index];
+                       return _ProductCard(
+                         product: product,
+                         onTap: () {
+                           Navigator.of(context).push(
+                             SmoothPageRoute.push(
+                               context,
+                               ProductDetailScreen(productId: product.productId),
+                             ),
+                           );
+                         },
+                       );
+                     },
+                   );
+                 },
+               ),
           ],
         ),
       ),
@@ -236,111 +253,70 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x14000000),
-              blurRadius: 16,
-              offset: Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                    child: ProductImage(
-                      imageUrl: product.imageUrl,
-                      fit: BoxFit.cover,
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 16,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: const Color(0xFF121826).withValues(alpha: 0.04),
                     ),
-                  ),
-                  if (product.discountPercent > 0)
-                    Positioned(
-                      top: 10,
-                      left: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8503A),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          '-${product.discountPercent}%',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 11,
-                          ),
-                        ),
+                    SizedBox.expand(
+                      child: ProductImage(
+                        imageUrl: product.imageUrl,
+                        fit: BoxFit.contain,
                       ),
                     ),
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.92),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.star_rounded, size: 13, color: Color(0xFFFFB400)),
-                            const SizedBox(width: 3),
-                            Text(
-                              product.rating.toStringAsFixed(1),
-                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.brand,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFF6B7386),
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    product.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: const Color(0xFF0F1420),
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.brand,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF6B7386),
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      product.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: const Color(0xFF0F1420),
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
                           '\$${product.finalPrice.toStringAsFixed(2)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -348,11 +324,9 @@ class _ProductCard extends StatelessWidget {
                                 fontWeight: FontWeight.w700,
                               ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      if (product.discountPercent > 0)
-                        Expanded(
-                          child: Text(
+                        if (product.discountPercent > 0) ...[
+                          const SizedBox(width: 8),
+                          Text(
                             '\$${product.price.toStringAsFixed(2)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -360,14 +334,71 @@ class _ProductCard extends StatelessWidget {
                                   decoration: TextDecoration.lineThrough,
                                 ),
                           ),
-                        ),
-                    ],
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (product.discountPercent > 0)
+            Positioned(
+              top: 10,
+              left: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8503A),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '-${product.discountPercent}%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
                   ),
-                ],
+                ),
               ),
             ),
-          ],
-        ),
+          Positioned(
+            top: 10,
+            right: 10,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star_rounded, size: 13, color: Color(0xFFFFB400)),
+                    const SizedBox(width: 3),
+                    Text(
+                      product.rating.toStringAsFixed(1),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: TextButton(
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              onPressed: onTap,
+              child: Container(),
+            ),
+          ),
+        ],
       ),
     );
   }
