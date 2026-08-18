@@ -25,6 +25,9 @@ export function createApp() {
   app.use("/auth", createAuthProxy());
   app.use("/api/v1/products", createCatalogProxy());
   app.use("/api/v2/products", createCatalogProxy());
+  app.use("/api/v1/brands", createCatalogProxy());
+  app.use("/api/v1/categories", createCatalogProxy());
+  app.use("/api/v1/price-range", createCatalogProxy());
 
   app.get("/health", (_request, response) => {
     response.status(200).json({

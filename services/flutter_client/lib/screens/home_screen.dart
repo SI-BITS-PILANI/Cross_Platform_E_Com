@@ -6,6 +6,7 @@ import '../navigation/smooth_page_route.dart';
 import '../providers/product_provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/product_image.dart';
+import '../widgets/product_filter_sheet.dart';
 import 'product_detail_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -140,9 +141,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
               child: TextField(
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  suffixIcon: Icon(Icons.tune_rounded),
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _FilterIconButton(
+                    activeCount: catalogState.filter.activeFilterCount,
+                    onTap: () => showProductFilterSheet(context),
+                  ),
                   hintText: 'Search products, brands, categories',
                   border: InputBorder.none,
                 ),
@@ -450,6 +454,57 @@ class _EmptyCatalogCard extends StatelessWidget {
       child: Text(
         'No products found.',
         style: Theme.of(context).textTheme.bodyMedium,
+      ),
+    );
+  }
+}
+
+class _FilterIconButton extends StatelessWidget {
+  final int activeCount;
+  final VoidCallback onTap;
+
+  const _FilterIconButton({
+    required this.activeCount,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            const Icon(Icons.tune_rounded),
+            if (activeCount > 0)
+              Positioned(
+                right: -6,
+                top: -6,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE8503A),
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 18,
+                    minHeight: 18,
+                  ),
+                  child: Text(
+                    '$activeCount',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
