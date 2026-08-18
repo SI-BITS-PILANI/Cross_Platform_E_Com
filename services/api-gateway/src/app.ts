@@ -37,6 +37,7 @@ export function createApp() {
   });
 
   app.use(authMiddleware);
+  
 
   app.get("/health/all", async (_request, response) => {
     const aggregatedHealth = await getAggregatedHealth();
