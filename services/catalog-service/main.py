@@ -76,14 +76,6 @@ async def list_products():
     return [serialize(d) for d in docs]
 
 
-@app.get("/api/v1/products/{product_id}")
-async def get_product(product_id: str):
-    doc = await products_collection.find_one({"product_id": product_id})
-    if not doc:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return serialize(doc)
-
-
 @app.post("/api/v1/products", status_code=201)
 async def create_product(payload: ProductCreate):
     pid = "p-" + uuid.uuid4().hex[:8]
@@ -231,3 +223,11 @@ async def get_price_range():
             "max_price": result[0]["max_price"],
         }
     return {"min_price": 0, "max_price": 0}
+
+
+@app.get("/api/v1/products/{product_id}")
+async def get_product(product_id: str):
+    doc = await products_collection.find_one({"product_id": product_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return serialize(doc)
