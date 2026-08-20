@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/product.dart';
+import '../providers/cart_provider.dart';
 import '../providers/product_provider.dart';
 import '../widgets/product_image.dart';
 
@@ -242,8 +243,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             child: ElevatedButton.icon(
               icon: const Icon(Icons.shopping_bag_outlined),
               onPressed: () {
+                ref.read(cartProvider.notifier).addItem(product);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Cart module will be added in Phase 7.')),
+                  SnackBar(content: Text('${product.name} added to cart.')),
                 );
               },
               label: const Text('Add to Cart'),

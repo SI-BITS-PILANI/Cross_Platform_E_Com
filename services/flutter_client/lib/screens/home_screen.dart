@@ -5,8 +5,10 @@ import '../models/product.dart';
 import '../navigation/smooth_page_route.dart';
 import '../providers/product_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/cart_provider.dart';
 import '../widgets/product_image.dart';
 import '../widgets/product_filter_sheet.dart';
+import 'cart_screen.dart';
 import 'product_detail_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -29,6 +31,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final catalogState = ref.watch(productCatalogProvider);
+    final cartState = ref.watch(cartProvider);
     final products = catalogState.filteredProducts;
     final categories = catalogState.categories;
 
@@ -62,6 +65,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ],
                   ),
                 ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x15000000),
+                        blurRadius: 14,
+                        offset: Offset(0, 4),
+                      )
+                    ],
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.shopping_bag_outlined),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            SmoothPageRoute.push(context, const CartScreen()),
+                          );
+                        },
+                      ),
+                      if (cartState.totalItems > 0)
+                        Positioned(
+                          right: 4,
+                          top: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFE8503A),
+                              shape: BoxShape.circle,
+                            ),
+                            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                            child: Text(
+                              '${cartState.totalItems}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
